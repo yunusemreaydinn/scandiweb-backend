@@ -1,9 +1,9 @@
 <?php
 
-require 'Model.php';
-include 'Book.php';
-include 'DVD.php';
-include 'Furniture.php';
+require_once 'Model.php';
+include_once 'Book.php';
+include_once 'DVD.php';
+include_once 'Furniture.php';
 
 class Controller extends Model
 {
@@ -40,13 +40,13 @@ class Controller extends Model
     public function saveProduct()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $sku = $_POST['sku'];
+            $product = json_decode(file_get_contents('php://input'));
+            $sku = $product->sku;
             $model = new Model;
 
             if (empty($sku)) {
                 return "SKU is REQUIRED.";
-            }
-            else if ($model->skuExists($sku)) {
+            } else if ($model->skuExists($sku)) {
                 return "SKU is already exists.";
             } else {
                 $productTypes = [
@@ -55,23 +55,16 @@ class Controller extends Model
                     'furniture' => Furniture::class
                 ];
 
-                $type = $_POST['productType'];
+                $type = $product->productType;
 
                 if (!isset($productTypes[$type])) {
                     return json_encode(['error' => 'Invalid Product Type']);
                 }
 
                 $class = $productTypes[$type];
-                $product = new $class($_POST['productType']);
-
-                $res = $product->saveProduct();
-                echo $res;
+                $productClass = new $class;
+                $productClass->saveProduct($product);
             }
         }
-
-
-
-
     }
-
 }

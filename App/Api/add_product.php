@@ -7,5 +7,5 @@ $controller = new Controller();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     return $controller->saveProduct();
 } else {
-    echo json_encode(['error' => 'Invalid request method']);
+    return json_encode(['error' => 'Invalid request method']);
 }
