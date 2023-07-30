@@ -16,21 +16,22 @@ class Controller extends Model
 
     public function deleteProducts()
     {
-        var_dump($_POST);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $skus = $_POST['sku'] ?? [];
-
-            if (empty($sku)) {
-                return "SKU is required";
+            $products = json_decode(file_get_contents('php://input'));
+            $skus = $products->skus ?? [];
+        
+            if (empty($skus)) {
+                echo "SKU is required";
+                exit();
             }
 
             $model = new Model;
             $deleteCount = $model->massDelete($skus);
 
             if ($deleteCount > 0) {
-                return "$deleteCount product(s) deleted successfully.";
+                echo "$deleteCount product(s) deleted successfully.";
             } else {
-                return "Products can not be found.";
+                echo "Products can not be found.";
             }
         }
 
@@ -45,9 +46,9 @@ class Controller extends Model
             $model = new Model;
 
             if (empty($sku)) {
-                return "SKU is REQUIRED.";
+                echo "SKU is REQUIRED.";
             } else if ($model->skuExists($sku)) {
-                return "SKU is already exists.";
+                echo "SKU is already exists.";
             } else {
                 $productTypes = [
                     'dvd' => DVD::class,
