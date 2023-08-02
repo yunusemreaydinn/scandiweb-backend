@@ -7,26 +7,31 @@ include_once 'Furniture.php';
 
 class Controller extends Model
 {
+    private $model;
+    private $product;
+
+    public function __construct() {
+        $this->product = json_decode(file_get_contents('php://input'));
+    }
+
     public function getProducts()
     {
-        $model = new Model;
-        $res = json_encode($model->getProducts());
+        $this->model = Model::getProducts();
+        $res = json_encode($this->model);
         echo $res;
     }
 
     public function deleteProducts()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $products = json_decode(file_get_contents('php://input'));
-            $skus = $products->skus ?? [];
+            $skus = $this->product->skus ?? [];
         
             if (empty($skus)) {
                 echo "SKU is required";
                 exit();
             }
 
-            $model = new Model;
-            $deleteCount = $model->massDelete($skus);
+            $deleteCount = Model::massDelete($skus);
 
             if ($deleteCount > 0) {
                 echo "$deleteCount product(s) deleted successfully.";
@@ -41,14 +46,12 @@ class Controller extends Model
     public function saveProduct()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $product = json_decode(file_get_contents('php://input'));
-            $sku = $product->sku;
-            $model = new Model;
+            $sku = $this->product->sku;
 
             if (empty($sku)) {
                 echo "SKU is REQUIRED.";
-            } else if ($model->skuExists($sku)) {
-                echo "SKU is already exists.";
+            } else if (Model::skuExists($sku)) {
+                exit();
             } else {
                 $productTypes = [
                     'dvd' => DVD::class,
@@ -56,15 +59,15 @@ class Controller extends Model
                     'furniture' => Furniture::class
                 ];
 
-                $type = $product->productType;
+                $type = $this->product->productType;
 
                 if (!isset($productTypes[$type])) {
                     return json_encode(['error' => 'Invalid Product Type']);
                 }
 
                 $class = $productTypes[$type];
-                $productClass = new $class;
-                $productClass->saveProduct($product);
+                $productClass = new $class($this->product->sku, $this->product->name, $this->product->price, $this->product->productType);
+                $productClass->saveProduct($this->product);
             }
         }
     }
